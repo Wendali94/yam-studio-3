@@ -2,17 +2,25 @@ name: Build YAM Studio
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
   pull_request:
-    branches: [main, master]
+    branches:
+      - main
+      - master
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
+    name: Build and Test
     runs-on: windows-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup .NET
@@ -20,10 +28,48 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore
+      - name: Verify project file
+        shell: pwsh
+        run: |
+          if (!(Test-Path "YamStudio.csproj")) {
+            Write-Error "YamStudio.csproj was not found in the repository root."
+            Get-ChildItem -Recurse -Filter *.csproj |
+              Select-Object -ExpandProperty FullName
+            exit 1
+          }
+
+      - name: Restore dependencies
         run: dotnet restore YamStudio.csproj
 
-      - name: Build
+      - name: Build application
         run: dotnet build YamStudio.csproj --configuration Release --no-restore
 
-      - name: Test
+      - name: Run tests
+        shell: pwsh
+        run: |
+          $projects = Get-ChildItem -Recurse -Filter *.Tests.csproj
+
+          if ($projects.Count -gt 0) {
+            foreach ($project in $projects) {
+              dotnet test $project.FullName --configuration Release
+              if ($LASTEXITCODE -ne 0) {
+                exit $LASTEXITCODE
+              }
+            }
+          } else {
+            Write-Host "No separate test project found."
+            dotnet test YamStudio.csproj --configuration Release --no-build
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+          }
+
+      - name: Publish Windows application
+        run: dotnet publish YamStudio.csproj --configuration Release --no-build --output ./publish
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: YamStudio-Windows
+          path: ./publish/
+          if-no-files-found: error
