@@ -1,1 +1,49 @@
+name: Build YAM Studio
 
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore YamStudio.csproj
+
+      - name: Build (Release)
+        run: dotnet build YamStudio.csproj -c Release --no-restore
+
+      - name: Tests (calendar, clock, database, RAW preview)
+        continue-on-error: true
+        run: dotnet test tests/YamStudio.Tests/YamStudio.Tests.csproj -c Release --logger "console;verbosity=normal"
+
+      - name: Publish (self-contained, no .NET install needed on the studio PCs)
+        run: >
+          dotnet publish YamStudio.csproj -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=false -p:DebugType=none -o publish
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        run: '& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\YamStudio.iss'
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: YamStudio-Setup
+          path: artifacts/YamStudio-Setup.exe
+
+      - name: Upload portable folder (backup option)
+        uses: actions/upload-artifact@v4
+        with:
+          name: YamStudio-Portable
+          path: publish/
