@@ -11,7 +11,6 @@ public class SettingsPage : PageBase
         var s = C.S;
         var root = new StackPanel();
 
-        // Language Card
         var lang = new StackPanel { Orientation = Orientation.Horizontal };
         lang.Children.Add(Ui.Btn("አማርኛ", () => SetLang("am"), Loc.Am ? 0 : 1));
         lang.Children.Add(Ui.Btn("English", () => SetLang("en"), Loc.Am ? 1 : 0));
@@ -24,7 +23,6 @@ public class SettingsPage : PageBase
             "Changes every screen, receipt and report together. Dates and clock always follow the Ethiopian calendar."), 12, Ui.Mut));
         root.Children.Add(Ui.Card(lc));
 
-        // Storage & Camera Card
         var data = new StackPanel();
         data.Children.Add(Ui.Txt("💾 " + Loc.T("የዳታ ማስቀመጫ እና የካሜራ ቅንብር", "Storage & Camera FTP Configuration"), 14, Ui.Fg, true));
         data.Children.Add(new Border { Height = 12 });
