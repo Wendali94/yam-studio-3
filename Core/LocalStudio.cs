@@ -3,14 +3,11 @@ using System.Windows.Media.Imaging;
 
 namespace YamStudio.Core;
 
-/// <summary>PC1: owns the database and all photo files on disk.</summary>
 public class LocalStudio : IStudio
 {
     public readonly Db Db;
     readonly AppSettings _s;
-    public bool IsHost => true;
 
-    /// <summary>Raised on any thread when a photo has arrived and been filed.</summary>
     public event Action<int, Photo> PhotoIngested;
 
     public LocalStudio(AppSettings s)
@@ -24,7 +21,6 @@ public class LocalStudio : IStudio
     public string ClientsRoot => Path.Combine(_s.RootDir, "Clients");
     string CacheRoot => Path.Combine(_s.RootDir, ".cache");
 
-    // ---------- folders ----------
     public static string Sanitize(string s)
     {
         foreach (var ch in Path.GetInvalidFileNameChars()) s = s.Replace(ch.ToString(), "");
@@ -34,9 +30,9 @@ public class LocalStudio : IStudio
     public static string FolderNameFor(Client c) => $"{Sanitize(c.Name)}_{c.Phone}_{EthCal.FileDate(c.Date)}";
 
     public string ClientFolderPath(Client c) =>
-        string.IsNullOrEmpty(c.Folder) ? "" : Path.Combine(ClientsRoot, c.Folder);
+        string.IsNullOrEmpty(c.Folder) ? EnsureFolder(c) : Path.Combine(ClientsRoot, c.Folder);
 
-    string EnsureFolder(Client c)
+    public string EnsureFolder(Client c)
     {
         if (string.IsNullOrEmpty(c.Folder))
         {
@@ -49,7 +45,6 @@ public class LocalStudio : IStudio
         return root;
     }
 
-    // ---------- clients ----------
     public Task<List<Client>> GetClientsAsync() => Task.FromResult(Db.GetClients());
 
     public Task<int> SaveClientAsync(Client c)
@@ -60,7 +55,6 @@ public class LocalStudio : IStudio
 
     public Task DeleteClientAsync(int id)
     {
-        // Photos on disk are never deleted by the app; only the records are removed.
         Db.DeleteClient(id);
         return Task.CompletedTask;
     }
@@ -71,14 +65,12 @@ public class LocalStudio : IStudio
 
     public Task<List<PaymentRow>> GetPaymentsAsync(string fromIso, string toIso) => Task.FromResult(Db.GetPaymentsBetween(fromIso, toIso));
 
-    // ---------- ingest (camera -> client folder) ----------
     public static bool IsPhotoFile(string path)
     {
         var e = Path.GetExtension(path).ToLowerInvariant();
         return e is ".jpg" or ".jpeg" or ".png" or ".arw" or ".dng";
     }
 
-    /// <summary>Files the camera/watcher dropped for the active client. Waits until the file is fully written.</summary>
     public Photo Ingest(int clientId, string srcPath, bool move)
     {
         var c = Db.GetClient(clientId);
@@ -98,7 +90,7 @@ public class LocalStudio : IStudio
         if (!File.Exists(dest))
         {
             File.Copy(srcPath, dest, false);
-            if (new FileInfo(dest).Length != expected) // verify the copy is complete
+            if (new FileInfo(dest).Length != expected)
             {
                 File.Delete(dest);
                 throw new IOException("Copy verification failed: " + name);
@@ -131,7 +123,6 @@ public class LocalStudio : IStudio
         }
     }
 
-    // ---------- photos ----------
     public Task<List<Photo>> GetPhotosAsync(int clientId) => Task.FromResult(Db.GetPhotos(clientId));
 
     public Task SetSelectedAsync(int photoId, bool selected) { Db.SetSelected(photoId, selected); return Task.CompletedTask; }
@@ -183,7 +174,6 @@ public class LocalStudio : IStudio
         return o.ToArray();
     }
 
-    // ---------- selection / handover ----------
     public Task<string> ConfirmSelectionAsync(int clientId) => Task.Run(() =>
     {
         var c = Db.GetClient(clientId) ?? throw new InvalidOperationException("client");
@@ -200,12 +190,6 @@ public class LocalStudio : IStudio
         return c.Folder;
     });
 
-    public Task<string> FetchSelectedAsync(int clientId, string localWorkDir)
-    {
-        var c = Db.GetClient(clientId);
-        return Task.FromResult(c == null ? "" : Path.Combine(ClientsRoot, c.Folder, "Selected"));
-    }
-
     public Task UploadFinalAsync(int clientId, IEnumerable<string> files)
     {
         var c = Db.GetClient(clientId);
@@ -213,18 +197,5 @@ public class LocalStudio : IStudio
         string fin = Path.Combine(EnsureFolder(c), "Final");
         foreach (var f in files) File.Copy(f, Path.Combine(fin, Path.GetFileName(f)), true);
         return Task.CompletedTask;
-    }
-
-    /// <summary>Used by the LAN API: zip of the Selected folder.</summary>
-    public string SelectedDirOf(int clientId)
-    {
-        var c = Db.GetClient(clientId);
-        return c == null || string.IsNullOrEmpty(c.Folder) ? "" : Path.Combine(ClientsRoot, c.Folder, "Selected");
-    }
-
-    public string FinalDirOf(int clientId)
-    {
-        var c = Db.GetClient(clientId);
-        return c == null ? "" : Path.Combine(EnsureFolder(c), "Final");
     }
 }
