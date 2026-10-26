@@ -29,7 +29,7 @@ public static class JobTypes
         ("ሠርግ", "Wedding"),
         ("ቀለበት/ኢንጌጅመንት", "Engagement"),
         ("የልደት", "Birthday"),
-        ("ስቱዲዮ ፎቶ", "Studio portrait"),
+        ("ስቱዲዮ ፎቶ", "Studio Portrait"),
         ("ምርቃት", "Graduation"),
         ("የንግድ/ማስታወቂያ", "Commercial"),
         ("ሌላ", "Other"),
@@ -68,9 +68,9 @@ public class Photo
 {
     public int Id { get; set; }
     public int ClientId { get; set; }
-    public string Base { get; set; } = "";       // file name without extension
-    public string JpgFile { get; set; } = "";    // file name inside Originals, or ""
-    public string RawFile { get; set; } = "";    // file name inside Originals, or ""
+    public string Base { get; set; } = "";
+    public string JpgFile { get; set; } = "";
+    public string RawFile { get; set; } = "";
     public bool Selected { get; set; }
     public string AddedAt { get; set; } = "";
     public string DisplayName => !string.IsNullOrEmpty(JpgFile) ? JpgFile : RawFile;
@@ -78,20 +78,15 @@ public class Photo
 
 public class AppSettings
 {
-    public string Mode { get; set; } = "";            // "host" (PC1) or "client" (PC2); empty = first run
     public string Lang { get; set; } = "am";
-    public string RootDir { get; set; } = @"C:\YamStudio";   // PC1: all data lives here
-    public string BackupDir { get; set; } = "";               // second disk or \\PC2\Backup
+    public string RootDir { get; set; } = @"C:\YamStudio";
+    public string BackupDir { get; set; } = "";
     public string BackupTime { get; set; } = "22:00";
     public bool BackupOnExit { get; set; } = true;
-    public string WatchDir { get; set; } = "";                // optional extra folder to watch (e.g. Imaging Edge output)
+    public string WatchDir { get; set; } = "";
     public int FtpPort { get; set; } = 2121;
     public string FtpUser { get; set; } = "yam";
     public string FtpPass { get; set; } = "yam123";
-    public int ApiPort { get; set; } = 5810;
-    public string Pin { get; set; } = "";
-    public string HostAddress { get; set; } = "";             // PC2: IP of PC1, e.g. 192.168.1.10
-    public string WorkDir { get; set; } = @"C:\YamWork";      // PC2: local work folder
     public int ActiveClientId { get; set; }
     public string LastBackup { get; set; } = "";
 }
