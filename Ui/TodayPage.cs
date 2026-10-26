@@ -22,7 +22,6 @@ public class TodayPage : PageBase
 
         var root = new StackPanel();
 
-        // Top KPI Stat Cards
         var stats = new WrapPanel();
         stats.Children.Add(Ui.Stat(Loc.T("የዛሬ ቀጠሮዎች", "Today's Shoots"), today.Count.ToString(), "📅", Ui.Blue));
         stats.Children.Add(Ui.Stat(Loc.T("ምርጫ የሚጠባበቁ", "Awaiting Proofing"), waitSel.ToString(), "❤", Ui.Warn));
@@ -31,7 +30,6 @@ public class TodayPage : PageBase
         stats.Children.Add(Ui.Stat(Loc.T("ቀሪ ክፍያ", "Pending Balance"), Loc.Money(due), "⏳", Ui.Bad));
         root.Children.Add(stats);
 
-        // Two-Column Dashboard Grid
         var mainGrid = new Grid();
         mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.55, GridUnitType.Star) });
         mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -39,7 +37,6 @@ public class TodayPage : PageBase
         var leftCol = new StackPanel { Margin = new Thickness(0, 0, 14, 0) };
         var rightCol = new StackPanel();
 
-        // Today's Schedule Card
         var todayBox = new StackPanel();
         todayBox.Children.Add(Ui.Txt($"⚡ {Loc.T("የዛሬ ቀጠሮዎች", "Today's Schedule")} · {EthCal.DateWd(t)}", 14, Ui.Fg, true));
         todayBox.Children.Add(new Border { Height = 12 });
@@ -47,7 +44,6 @@ public class TodayPage : PageBase
         foreach (var c in today) todayBox.Children.Add(JobRow(c, Reload, false));
         leftCol.Children.Add(Ui.Card(todayBox));
 
-        // Work in Progress Card
         var wipBox = new StackPanel();
         wipBox.Children.Add(Ui.Txt($"🎬 {Loc.T("በሂደት ላይ ያሉ ስራዎች", "Active Production Queue")}", 14, Ui.Fg, true));
         wipBox.Children.Add(new Border { Height = 12 });
@@ -55,10 +51,8 @@ public class TodayPage : PageBase
         foreach (var c in wip) wipBox.Children.Add(JobRow(c, Reload, true));
         leftCol.Children.Add(Ui.Card(wipBox));
 
-        // Analytics Pulse Card (7-day visual chart)
         rightCol.Children.Add(BuildAnalyticsCard(all, j));
 
-        // Upcoming 7 Days Card
         var nextBox = new StackPanel();
         nextBox.Children.Add(Ui.Txt($"🗓 {Loc.T("በሚመጡት 7 ቀናት", "Upcoming 7 Days")}", 14, Ui.Fg, true));
         nextBox.Children.Add(new Border { Height = 12 });
@@ -66,7 +60,6 @@ public class TodayPage : PageBase
         foreach (var c in next) nextBox.Children.Add(JobRow(c, Reload, true));
         rightCol.Children.Add(Ui.Card(nextBox));
 
-        // Reminders Card
         var late = all.Where(c => c.Status != JobStatus.Delivered && c.Status != JobStatus.Booked && EthCal.IsoToJdn(c.Date) < j - 7).ToList();
         if (late.Count > 0 || all.Any(c => c.Status == JobStatus.Delivered && c.Balance > 0))
         {
