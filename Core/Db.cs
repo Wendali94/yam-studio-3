@@ -10,7 +10,6 @@ public class PaymentRow
     public decimal Amount { get; set; }
 }
 
-/// <summary>SQLite storage. Lives only on PC1 (host). One short connection per call, guarded by a lock.</summary>
 public class Db
 {
     readonly string _path;
@@ -164,7 +163,6 @@ WHERE p.date>=$f AND p.date<=$t ORDER BY p.date",
     public Photo GetPhoto(int id) =>
         Query("SELECT id,client_id,base,jpg,raw,selected,added_at FROM photos WHERE id=$i", MapPhoto, ("$i", id)).FirstOrDefault();
 
-    /// <summary>Adds a file to the client's photo list; JPG and RAW with the same base name become one photo.</summary>
     public Photo UpsertPhoto(int clientId, string fileName)
     {
         string b = Path.GetFileNameWithoutExtension(fileName);
@@ -187,7 +185,6 @@ WHERE p.date>=$f AND p.date<=$t ORDER BY p.date",
     public void SetSelected(int photoId, bool sel) =>
         Exec("UPDATE photos SET selected=$s WHERE id=$i", ("$s", sel ? 1 : 0), ("$i", photoId));
 
-    /// <summary>Consistent copy of the database using SQLite's own backup (safe while the app is running).</summary>
     public void BackupTo(string destFile)
     {
         if (File.Exists(destFile)) File.Delete(destFile);
