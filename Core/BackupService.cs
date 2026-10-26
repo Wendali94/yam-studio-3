@@ -1,6 +1,5 @@
 namespace YamStudio.Core;
 
-/// <summary>Copies the database and every client folder to a second disk / PC2. Only new or changed files are copied.</summary>
 public class BackupService
 {
     readonly LocalStudio _studio;
