@@ -18,7 +18,7 @@ public partial class App : Application
         _single = new Mutex(true, "YamStudioManagerSingleInstance", out bool first);
         if (!first)
         {
-            MessageBox.Show("YAM Studio is already running.");
+            MessageBox.Show("YAM PICTURES Studio is already running.");
             Shutdown();
             return;
         }
@@ -32,17 +32,14 @@ public partial class App : Application
                 File.AppendAllText(log, $"{DateTime.Now:s}\n{ex.Exception}\n\n");
             }
             catch { }
-            MessageBox.Show(ex.Exception.Message, "YAM Studio");
+            MessageBox.Show(ex.Exception.Message, "YAM PICTURES");
             ex.Handled = true;
         };
 
         SettingsStore.Load();
-        if (string.IsNullOrEmpty(SettingsStore.Current.Mode))
-        {
-            var setup = new SetupWindow();
-            if (setup.ShowDialog() != true) { Shutdown(); return; }
-        }
+        try { Directory.CreateDirectory(SettingsStore.Current.RootDir); } catch { }
         Loc.Lang = SettingsStore.Current.Lang;
+
         var main = new MainWindow();
         MainWindow = main;
         main.Show();
