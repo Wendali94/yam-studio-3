@@ -16,11 +16,7 @@ public static class SettingsStore
                 Current = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new AppSettings();
         }
         catch { Current = new AppSettings(); }
-        if (string.IsNullOrEmpty(Current.Pin))
-        {
-            Current.Pin = Random.Shared.Next(100000, 999999).ToString();
-            Save();
-        }
+        if (string.IsNullOrWhiteSpace(Current.RootDir)) Current.RootDir = @"C:\YamStudio";
         Loc.Lang = Current.Lang;
     }
 
