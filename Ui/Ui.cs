@@ -3,49 +3,162 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 using YamStudio.Core;
 
 namespace YamStudio.Views;
 
-/// <summary>Everything the pages share: services and callbacks.</summary>
 public class Ctx
 {
     public static Ctx I;
     public IStudio Studio;
-    public LocalStudio Local;       // PC1 only
-    public IngestService Ingest;    // PC1 only
-    public BackupService Backup;    // PC1 only
+    public LocalStudio Local;
+    public IngestService Ingest;
+    public BackupService Backup;
     public AppSettings S => SettingsStore.Current;
     public Action<string> Nav;
     public Action Rebuild;
     public Action<bool> ClientMode;
     public Action<string> Toast;
-    public bool Host => Studio.IsHost;
 }
 
 public static class Ui
 {
     static SolidColorBrush B(string h) { var b = (SolidColorBrush)new BrushConverter().ConvertFromString(h); b.Freeze(); return b; }
-    public static readonly Brush Bg = B("#0E1014"), Panel = B("#161A22"), Panel2 = B("#1D222C"), Line = B("#2A303C"),
-        Fg = B("#EBE8E1"), Mut = B("#8F96A6"), Gold = B("#D6A84F"), Ok = B("#4CC38A"), Warn = B("#E5A23C"), Bad = B("#E5604D"),
-        Blue = B("#5AA2FF"), Black = B("#000000");
-    public static readonly FontFamily Font = new("Segoe UI, Nirmala UI, Ebrima");
+
+    // Ultra-Modern Dark SaaS Palette (inspired by your reference screenshots)
+    public static readonly Brush Bg = B("#09090E"),
+        Panel = B("#12131C"),
+        Panel2 = B("#191B28"),
+        InputBg = B("#141622"),
+        Line = B("#23263A"),
+        LineGlow = B("#3B3F5C"),
+        Fg = B("#F4F5F8"),
+        Mut = B("#8A90A6"),
+        Gold = B("#A855F7"),      // Electric Violet Accent
+        Accent2 = B("#6366F1"),   // Indigo Accent
+        Ok = B("#10B981"),        // Neon Emerald
+        Warn = B("#F59E0B"),      // Amber Glow
+        Bad = B("#F43F5E"),       // Rose Red
+        Blue = B("#38BDF8"),      // Sky Cyan
+        Black = B("#050508");
+
+    public static readonly LinearGradientBrush AccentGrad = new(
+        (Color)ColorConverter.ConvertFromString("#8B5CF6"),
+        (Color)ColorConverter.ConvertFromString("#6366F1"),
+        new Point(0, 0), new Point(1, 1));
+
+    public static readonly LinearGradientBrush CardGrad = new(
+        (Color)ColorConverter.ConvertFromString("#151722"),
+        (Color)ColorConverter.ConvertFromString("#101119"),
+        new Point(0, 0), new Point(0, 1));
+
+    public static readonly FontFamily Font = new("Segoe UI Variable Display, Segoe UI, Nyala, Ebrima");
 
     public static Brush StatusBrush(string s) => s switch
     {
-        JobStatus.Booked => Blue, JobStatus.Shot => Warn, JobStatus.Selected => B("#C58BFF"),
-        JobStatus.Editing => B("#FF8F5A"), JobStatus.Review => B("#5AD7E5"), JobStatus.Delivered => Ok, _ => Mut
+        JobStatus.Booked => Blue,
+        JobStatus.Shot => Warn,
+        JobStatus.Selected => B("#C084FC"),
+        JobStatus.Editing => B("#FB923C"),
+        JobStatus.Review => B("#2DD4BF"),
+        JobStatus.Delivered => Ok,
+        _ => Mut
     };
+
+    /// <summary>Renders the Yam PICTURES logo (loads logo.png if present, or draws the custom script + filmstrip vector logo).</summary>
+    public static UIElement Logo(double scale = 1.0)
+    {
+        string customLogo = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo.png");
+        if (File.Exists(customLogo))
+        {
+            try
+            {
+                var bi = new BitmapImage(new Uri(customLogo));
+                return new Image { Source = bi, Height = 58 * scale, Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left };
+            }
+            catch { }
+        }
+
+        var g = new Grid { LayoutTransform = new ScaleTransform(scale, scale), HorizontalAlignment = HorizontalAlignment.Left };
+        var c = new Canvas { Width = 195, Height = 64 };
+
+        // Top Film-Strip Wave (Matches your Yam Pictures logo!)
+        var waveTop = new System.Windows.Shapes.Path
+        {
+            Data = Geometry.Parse("M 68,16 C 85,23 108,5 128,15 C 138,20 144,27 148,33"),
+            Stroke = Brushes.White, StrokeThickness = 1.6
+        };
+        var waveBot = new System.Windows.Shapes.Path
+        {
+            Data = Geometry.Parse("M 64,23 C 83,30 106,12 126,21 C 136,26 142,31 146,35"),
+            Stroke = Brushes.White, StrokeThickness = 1.6
+        };
+        var rungs = new System.Windows.Shapes.Path
+        {
+            Data = Geometry.Parse("M 74,18 L 72,24 M 84,18 L 82,24 M 94,16 L 92,22 M 104,13 L 103,19 M 114,12 L 113,18 M 124,14 L 123,20 M 134,18 L 132,24"),
+            Stroke = Brushes.White, StrokeThickness = 2.2
+        };
+        c.Children.Add(waveTop);
+        c.Children.Add(waveBot);
+        c.Children.Add(rungs);
+
+        // Brush-script "Yam"
+        var yam = new TextBlock
+        {
+            Text = "Yam",
+            FontFamily = new FontFamily("Segoe Script, Brush Script MT, Gabriola, Segoe UI"),
+            FontSize = 38,
+            FontWeight = FontWeights.Bold,
+            FontStyle = FontStyles.Italic,
+            Foreground = Brushes.White,
+            Effect = new DropShadowEffect { Color = Color.FromRgb(168, 85, 247), BlurRadius = 14, ShadowDepth = 0, Opacity = 0.45 }
+        };
+        Canvas.SetLeft(yam, 6);
+        Canvas.SetTop(yam, 6);
+        c.Children.Add(yam);
+
+        // Spaced "P I C T U R E S"
+        var pic = new TextBlock
+        {
+            Text = "P  I  C  T  U  R  E  S",
+            FontFamily = new FontFamily("Segoe UI, Bahnschrift, Arial"),
+            FontSize = 8.5,
+            FontWeight = FontWeights.Bold,
+            Foreground = B("#D1D5DB")
+        };
+        Canvas.SetLeft(pic, 66);
+        Canvas.SetTop(pic, 47);
+        c.Children.Add(pic);
+
+        g.Children.Add(c);
+        return g;
+    }
 
     static ControlTemplate _btnTpl;
     static ControlTemplate BtnTemplate => _btnTpl ??= (ControlTemplate)XamlReader.Parse(
         "<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' TargetType='Button'>" +
         "<Border x:Name='bd' xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml' Background='{TemplateBinding Background}' BorderBrush='{TemplateBinding BorderBrush}' " +
-        "BorderThickness='{TemplateBinding BorderThickness}' CornerRadius='9' Padding='{TemplateBinding Padding}'>" +
+        "BorderThickness='{TemplateBinding BorderThickness}' CornerRadius='10' Padding='{TemplateBinding Padding}'>" +
         "<ContentPresenter HorizontalAlignment='Center' VerticalAlignment='Center'/></Border>" +
-        "<ControlTemplate.Triggers><Trigger Property='IsMouseOver' Value='True'><Setter TargetName='bd' Property='Opacity' Value='0.85'/></Trigger>" +
-        "<Trigger Property='IsEnabled' Value='False'><Setter TargetName='bd' Property='Opacity' Value='0.35'/></Trigger></ControlTemplate.Triggers></ControlTemplate>");
+        "<ControlTemplate.Triggers>" +
+        "<Trigger Property='IsMouseOver' Value='True'><Setter TargetName='bd' Property='Opacity' Value='0.88'/><Setter TargetName='bd' Property='BorderBrush' Value='#A855F7'/></Trigger>" +
+        "<Trigger Property='IsPressed' Value='True'><Setter TargetName='bd' Property='Opacity' Value='0.75'/></Trigger>" +
+        "<Trigger Property='IsEnabled' Value='False'><Setter TargetName='bd' Property='Opacity' Value='0.35'/></Trigger>" +
+        "</ControlTemplate.Triggers></ControlTemplate>");
+
+    static ControlTemplate _inputTpl;
+    static ControlTemplate InputTemplate => _inputTpl ??= (ControlTemplate)XamlReader.Parse(
+        "<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' TargetType='TextBox'>" +
+        "<Border x:Name='bd' xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml' Background='{TemplateBinding Background}' BorderBrush='{TemplateBinding BorderBrush}' BorderThickness='1' CornerRadius='10' Padding='{TemplateBinding Padding}'>" +
+        "<ScrollViewer x:Name='PART_ContentHost' Focusable='false' HorizontalScrollBarVisibility='Hidden' VerticalScrollBarVisibility='Hidden'/>" +
+        "</Border>" +
+        "<ControlTemplate.Triggers>" +
+        "<Trigger Property='IsMouseOver' Value='True'><Setter TargetName='bd' Property='BorderBrush' Value='#4C5175'/></Trigger>" +
+        "<Trigger Property='IsKeyboardFocused' Value='True'><Setter TargetName='bd' Property='BorderBrush' Value='#A855F7'/><Setter TargetName='bd' Property='Background' Value='#181B2A'/></Trigger>" +
+        "</ControlTemplate.Triggers></ControlTemplate>");
 
     public static TextBlock Txt(string s, double size = 14, Brush fg = null, bool bold = false) => new()
     {
@@ -53,36 +166,53 @@ public static class Ui
         TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center
     };
 
-    /// <summary>kind: 0 = gold primary, 1 = secondary, 2 = danger</summary>
-    public static Button Btn(string text, Action click, int kind = 0, double size = 14)
+    /// <summary>kind: 0 = Neon Violet Gradient, 1 = Dark Glass Secondary, 2 = Danger Rose</summary>
+    public static Button Btn(string text, Action click, int kind = 0, double size = 13.5)
     {
         var b = new Button
         {
-            Content = text, Template = BtnTemplate, Padding = new Thickness(14, 8, 14, 8), Margin = new Thickness(0, 0, 8, 0),
+            Content = text, Template = BtnTemplate, Padding = new Thickness(16, 9, 16, 9), Margin = new Thickness(0, 0, 8, 0),
             FontSize = size, Cursor = System.Windows.Input.Cursors.Hand, FontWeight = FontWeights.SemiBold,
-            Background = kind == 0 ? Gold : kind == 1 ? Panel2 : Brushes.Transparent,
-            Foreground = kind == 0 ? B("#1A1405") : kind == 1 ? Fg : Bad,
-            BorderBrush = kind == 0 ? Gold : kind == 1 ? Line : Bad, BorderThickness = new Thickness(1)
+            Background = kind == 0 ? AccentGrad : kind == 1 ? Panel2 : B("#2A1219"),
+            Foreground = kind == 0 ? Brushes.White : kind == 1 ? Fg : Bad,
+            BorderBrush = kind == 0 ? B("#A855F7") : kind == 1 ? Line : Bad,
+            BorderThickness = new Thickness(1)
         };
+        if (kind == 0)
+            b.Effect = new DropShadowEffect { Color = Color.FromRgb(124, 58, 237), BlurRadius = 14, ShadowDepth = 0, Opacity = 0.35 };
         b.Click += (_, _) => { try { click(); } catch (Exception e) { MessageBox.Show(e.Message); } };
         return b;
     }
 
-    public static Border Card(UIElement child, double pad = 16) => new()
+    public static Border Card(UIElement child, double pad = 18) => new()
     {
-        Background = Panel, BorderBrush = Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(14),
-        Padding = new Thickness(pad), Child = child, Margin = new Thickness(0, 0, 0, 14)
+        Background = CardGrad,
+        BorderBrush = Line,
+        BorderThickness = new Thickness(1),
+        CornerRadius = new CornerRadius(16),
+        Padding = new Thickness(pad),
+        Child = child,
+        Margin = new Thickness(0, 0, 0, 14),
+        Effect = new DropShadowEffect { Color = Colors.Black, BlurRadius = 22, ShadowDepth = 4, Opacity = 0.45 }
     };
 
     public static TextBox Input(string text = "", double width = double.NaN) => new()
     {
-        Text = text, Padding = new Thickness(8, 7, 8, 7), FontSize = 14, Width = width, Background = Brushes.White,
-        Foreground = Brushes.Black, BorderBrush = Line, Margin = new Thickness(0, 0, 0, 10)
+        Text = text,
+        Template = InputTemplate,
+        Padding = new Thickness(12, 9, 12, 9),
+        FontSize = 14,
+        Width = width,
+        Background = InputBg,
+        Foreground = Fg,
+        CaretBrush = Gold,
+        BorderBrush = Line,
+        Margin = new Thickness(0, 4, 0, 12)
     };
 
     public static ComboBox Combo(IEnumerable<string> items, int sel = 0, double width = double.NaN)
     {
-        var c = new ComboBox { FontSize = 14, Padding = new Thickness(8, 6, 8, 6), Width = width, Margin = new Thickness(0, 0, 0, 10) };
+        var c = new ComboBox { FontSize = 14, Width = width, Margin = new Thickness(0, 4, 0, 12) };
         foreach (var i in items) c.Items.Add(i);
         c.SelectedIndex = sel;
         return c;
@@ -91,24 +221,62 @@ public static class Ui
     public static StackPanel Field(string label, UIElement input)
     {
         var sp = new StackPanel { Margin = new Thickness(0, 0, 10, 0) };
-        sp.Children.Add(Txt(label, 12, Mut));
+        sp.Children.Add(Txt(label, 12, Mut, true));
         sp.Children.Add(input);
         return sp;
     }
 
-    public static Border Chip(string status) => new()
+    public static Border Chip(string status)
     {
-        BorderBrush = StatusBrush(status), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(99),
-        Padding = new Thickness(10, 2, 10, 2), Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center,
-        Child = Txt(JobStatus.Label(status), 12, StatusBrush(status))
-    };
+        var br = (SolidColorBrush)StatusBrush(status);
+        var c = br.Color;
+        var bg = new SolidColorBrush(Color.FromArgb(32, c.R, c.G, c.B));
+        return new Border
+        {
+            Background = bg,
+            BorderBrush = new SolidColorBrush(Color.FromArgb(95, c.R, c.G, c.B)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(99),
+            Padding = new Thickness(12, 4, 12, 4),
+            Margin = new Thickness(0, 0, 8, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            Child = Txt("● " + JobStatus.Label(status), 11.5, br, true)
+        };
+    }
 
-    public static Border Stat(string label, string value) => new()
+    public static Border Stat(string label, string value, string icon = "✦", Brush accent = null)
     {
-        Background = Panel, BorderBrush = Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(14),
-        Padding = new Thickness(16), Margin = new Thickness(0, 0, 12, 12), MinWidth = 170,
-        Child = new StackPanel { Children = { Txt(label, 13, Mut), Txt(value, 28, Gold, true) } }
-    };
+        accent ??= Gold;
+        var top = new DockPanel { Margin = new Thickness(0, 0, 0, 8) };
+        var badge = new Border
+        {
+            Width = 34, Height = 34, CornerRadius = new CornerRadius(10),
+            Background = Panel2, BorderBrush = Line, BorderThickness = new Thickness(1),
+            Child = new TextBlock { Text = icon, FontSize = 15, Foreground = accent, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center }
+        };
+        DockPanel.SetDock(badge, Dock.Right);
+        top.Children.Add(badge);
+        top.Children.Add(Txt(label, 12.5, Mut, true));
+
+        var bar = new Border
+        {
+            Height = 3, CornerRadius = new CornerRadius(2), Margin = new Thickness(0, 10, 0, 0),
+            Background = new LinearGradientBrush(((SolidColorBrush)accent).Color, Colors.Transparent, new Point(0, 0), new Point(1, 0))
+        };
+
+        return new Border
+        {
+            Background = CardGrad,
+            BorderBrush = Line,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(16),
+            Padding = new Thickness(18, 14, 18, 14),
+            Margin = new Thickness(0, 0, 14, 14),
+            MinWidth = 205,
+            Effect = new DropShadowEffect { Color = Colors.Black, BlurRadius = 18, ShadowDepth = 3, Opacity = 0.4 },
+            Child = new StackPanel { Children = { top, Txt(value, 26, Fg, true), bar } }
+        };
+    }
 
     public static BitmapImage ToImage(byte[] bytes)
     {
@@ -126,40 +294,26 @@ public static class Ui
     {
         var w = new Window
         {
-            Title = title, Width = 380, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Title = title, Width = 400, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Owner = Application.Current.MainWindow, Background = Panel, ResizeMode = ResizeMode.NoResize, FontFamily = Font
         };
         var tb = Input(def);
         string result = null;
-        var sp = new StackPanel { Margin = new Thickness(18) };
-        sp.Children.Add(Txt(label, 14));
+        var sp = new StackPanel { Margin = new Thickness(22) };
+        sp.Children.Add(Txt(label, 14, Fg, true));
         sp.Children.Add(new Border { Height = 8 });
         sp.Children.Add(tb);
-        var row = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+        var row = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 8, 0, 0) };
         row.Children.Add(Btn(Loc.T("ሰርዝ", "Cancel"), () => w.Close(), 1));
-        row.Children.Add(Btn("OK", () => { result = tb.Text; w.Close(); }));
+        row.Children.Add(Btn(Loc.T("አስቀምጥ", "Confirm"), () => { result = tb.Text; w.Close(); }));
         sp.Children.Add(row);
         w.Content = sp;
         w.Loaded += (_, _) => { tb.Focus(); tb.SelectAll(); };
         w.ShowDialog();
         return result;
     }
-
-    public static Grid Header(string left, params UIElement[] right)
-    {
-        var g = new Grid { Margin = new Thickness(0, 0, 0, 14) };
-        g.ColumnDefinitions.Add(new ColumnDefinition());
-        g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        g.Children.Add(Txt(left, 18, Fg, true));
-        var sp = new StackPanel { Orientation = Orientation.Horizontal };
-        foreach (var r in right) sp.Children.Add(r);
-        Grid.SetColumn(sp, 1);
-        g.Children.Add(sp);
-        return g;
-    }
 }
 
-/// <summary>Ethiopian date picker: day / month name / year. Value is always an ISO Gregorian date.</summary>
 public class EthDatePicker : StackPanel
 {
     readonly ComboBox _d = new(), _m = new(), _y = new();
@@ -171,8 +325,8 @@ public class EthDatePicker : StackPanel
         iso ??= EthCal.TodayIso();
         var e = EthCal.IsoToEth(iso);
         int ty = EthCal.IsoToEth(EthCal.TodayIso()).y;
-        foreach (var c in new[] { _d, _m, _y }) { c.FontSize = 14; c.Padding = new Thickness(8, 6, 8, 6); c.Margin = new Thickness(0, 0, 6, 10); Children.Add(c); }
-        _d.Width = 60; _m.Width = 120; _y.Width = 80;
+        foreach (var c in new[] { _d, _m, _y }) { c.FontSize = 14; c.Margin = new Thickness(0, 4, 8, 12); Children.Add(c); }
+        _d.Width = 72; _m.Width = 135; _y.Width = 95;
         for (int y = Math.Min(e.y, ty - 1); y <= Math.Max(e.y, ty + 3); y++) _y.Items.Add(y);
         var names = Loc.Am ? EthCal.MonthAm : EthCal.MonthEn;
         foreach (var n in names) _m.Items.Add(n);
@@ -196,14 +350,13 @@ public class EthDatePicker : StackPanel
     public string Value => EthCal.EthToIso((int)_y.SelectedItem, _m.SelectedIndex + 1, _d.SelectedIndex + 1);
 }
 
-/// <summary>Time picker showing the Ethiopian clock (ጠዋት 3:00 ...). Value is HH:mm 24h.</summary>
 public class EthTimePicker : ComboBox
 {
     readonly List<string> _vals = new();
 
     public EthTimePicker(string hm = "09:00")
     {
-        FontSize = 14; Padding = new Thickness(8, 6, 8, 6); Margin = new Thickness(0, 0, 0, 10); Width = 150;
+        FontSize = 14; Margin = new Thickness(0, 4, 0, 12); Width = 170;
         for (int h = 0; h < 24; h++)
             foreach (int m in new[] { 0, 15, 30, 45 })
             {
