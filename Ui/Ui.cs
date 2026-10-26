@@ -5,7 +5,6 @@ using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using YamStudio.Core;
 
 namespace YamStudio.Views;
@@ -28,7 +27,6 @@ public static class Ui
 {
     static SolidColorBrush B(string h) { var b = (SolidColorBrush)new BrushConverter().ConvertFromString(h); b.Freeze(); return b; }
 
-    // Ultra-Modern Dark SaaS Palette (inspired by your reference screenshots)
     public static readonly Brush Bg = B("#09090E"),
         Panel = B("#12131C"),
         Panel2 = B("#191B28"),
@@ -37,12 +35,12 @@ public static class Ui
         LineGlow = B("#3B3F5C"),
         Fg = B("#F4F5F8"),
         Mut = B("#8A90A6"),
-        Gold = B("#A855F7"),      // Electric Violet Accent
-        Accent2 = B("#6366F1"),   // Indigo Accent
-        Ok = B("#10B981"),        // Neon Emerald
-        Warn = B("#F59E0B"),      // Amber Glow
-        Bad = B("#F43F5E"),       // Rose Red
-        Blue = B("#38BDF8"),      // Sky Cyan
+        Gold = B("#A855F7"),
+        Accent2 = B("#6366F1"),
+        Ok = B("#10B981"),
+        Warn = B("#F59E0B"),
+        Bad = B("#F43F5E"),
+        Blue = B("#38BDF8"),
         Black = B("#050508");
 
     public static readonly LinearGradientBrush AccentGrad = new(
@@ -68,7 +66,6 @@ public static class Ui
         _ => Mut
     };
 
-    /// <summary>Renders the Yam PICTURES logo (loads logo.png if present, or draws the custom script + filmstrip vector logo).</summary>
     public static UIElement Logo(double scale = 1.0)
     {
         string customLogo = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo.png");
@@ -85,7 +82,6 @@ public static class Ui
         var g = new Grid { LayoutTransform = new ScaleTransform(scale, scale), HorizontalAlignment = HorizontalAlignment.Left };
         var c = new Canvas { Width = 195, Height = 64 };
 
-        // Top Film-Strip Wave (Matches your Yam Pictures logo!)
         var waveTop = new System.Windows.Shapes.Path
         {
             Data = Geometry.Parse("M 68,16 C 85,23 108,5 128,15 C 138,20 144,27 148,33"),
@@ -105,7 +101,6 @@ public static class Ui
         c.Children.Add(waveBot);
         c.Children.Add(rungs);
 
-        // Brush-script "Yam"
         var yam = new TextBlock
         {
             Text = "Yam",
@@ -120,7 +115,6 @@ public static class Ui
         Canvas.SetTop(yam, 6);
         c.Children.Add(yam);
 
-        // Spaced "P I C T U R E S"
         var pic = new TextBlock
         {
             Text = "P  I  C  T  U  R  E  S",
@@ -166,7 +160,6 @@ public static class Ui
         TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center
     };
 
-    /// <summary>kind: 0 = Neon Violet Gradient, 1 = Dark Glass Secondary, 2 = Danger Rose</summary>
     public static Button Btn(string text, Action click, int kind = 0, double size = 13.5)
     {
         var b = new Button
