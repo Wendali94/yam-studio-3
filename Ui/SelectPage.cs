@@ -7,7 +7,6 @@ using YamStudio.Core;
 
 namespace YamStudio.Views;
 
-/// <summary>Big-screen photo selection for the client. Arrow keys / Space on the keyboard, or tap the buttons.</summary>
 public class SelectPage : PageBase
 {
     Client _client;
@@ -79,13 +78,12 @@ public class SelectPage : PageBase
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-        // top bar
-        var top = new DockPanel { Margin = new Thickness(0, 0, 0, 10), LastChildFill = true };
+        var top = new DockPanel { Margin = new Thickness(0, 0, 0, 12), LastChildFill = true };
         var rightBar = new StackPanel { Orientation = Orientation.Horizontal };
         DockPanel.SetDock(rightBar, Dock.Right);
-        rightBar.Children.Add(Ui.Btn(_onlyHearts ? "☰ " + Loc.T("ሁሉም", "All") : "❤ " + Loc.T("የተመረጡት ብቻ", "Selected only"), () => { _onlyHearts = !_onlyHearts; ApplyFilter(0); BuildUi(); Safe(Show); }, 1));
-        rightBar.Children.Add(Ui.Btn(_clientMode ? "⬅ " + Loc.T("ከደንበኛ ሁነታ ውጣ", "Exit client mode") : "🖥 " + Loc.T("የደንበኛ ሁነታ", "Client mode"), () => SetClientMode(!_clientMode), 1));
-        rightBar.Children.Add(Ui.Btn("✔ " + Loc.T("ምርጫ አረጋግጥ", "Confirm selection"), Confirm));
+        rightBar.Children.Add(Ui.Btn(_onlyHearts ? "☰ " + Loc.T("ሁሉም", "All Photos") : "❤ " + Loc.T("የተመረጡት ብቻ", "Selected Only"), () => { _onlyHearts = !_onlyHearts; ApplyFilter(0); BuildUi(); Safe(Show); }, 1));
+        rightBar.Children.Add(Ui.Btn(_clientMode ? "⬅ " + Loc.T("ከደንበኛ ሁነታ ውጣ", "Exit Fullscreen") : "🖥 " + Loc.T("የደንበኛ ሁነታ", "Client Mode"), () => SetClientMode(!_clientMode), 1));
+        rightBar.Children.Add(Ui.Btn("✔ " + Loc.T("ምርጫ አረጋግጥ", "Confirm Selection"), Confirm));
         top.Children.Add(rightBar);
         if (_clientMode) top.Children.Add(Ui.Txt(_client.Name, 20, Ui.Fg, true));
         else
@@ -102,7 +100,6 @@ public class SelectPage : PageBase
         }
         root.Children.Add(top);
 
-        // viewer
         _big = new Image { Stretch = Stretch.Uniform };
         var viewer = new Grid { Background = Ui.Black };
         viewer.Children.Add(_big);
@@ -117,17 +114,16 @@ public class SelectPage : PageBase
         };
         _heart.Click += (_, _) => ToggleHeart();
         viewer.Children.Add(_heart);
-        _counter = new TextBlock { Foreground = Brushes.White, FontSize = 16, Margin = new Thickness(16, 0, 0, 16), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Bottom, Background = new SolidColorBrush(Color.FromArgb(160, 0, 0, 0)), Padding = new Thickness(12, 4, 12, 4) };
+        _counter = new TextBlock { Foreground = Brushes.White, FontSize = 15, FontWeight = FontWeights.SemiBold, Margin = new Thickness(16, 0, 0, 16), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Bottom, Background = new SolidColorBrush(Color.FromArgb(180, 15, 16, 24)), Padding = new Thickness(14, 6, 14, 6) };
         viewer.Children.Add(_counter);
-        _name = new TextBlock { Foreground = new SolidColorBrush(Color.FromArgb(170, 255, 255, 255)), FontSize = 12, Margin = new Thickness(12, 8, 0, 0), VerticalAlignment = VerticalAlignment.Top, Visibility = _clientMode ? Visibility.Collapsed : Visibility.Visible };
+        _name = new TextBlock { Foreground = new SolidColorBrush(Color.FromArgb(170, 255, 255, 255)), FontSize = 12, Margin = new Thickness(14, 10, 0, 0), VerticalAlignment = VerticalAlignment.Top, Visibility = _clientMode ? Visibility.Collapsed : Visibility.Visible };
         viewer.Children.Add(_name);
-        var vb = new Border { CornerRadius = new CornerRadius(14), ClipToBounds = true, Child = viewer };
+        var vb = new Border { CornerRadius = new CornerRadius(16), BorderBrush = Ui.Line, BorderThickness = new Thickness(1), ClipToBounds = true, Child = viewer };
         Grid.SetRow(vb, 1);
         root.Children.Add(vb);
 
-        // filmstrip
         _strip = new StackPanel { Orientation = Orientation.Horizontal };
-        _stripScroll = new ScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, Content = _strip, Margin = new Thickness(0, 10, 0, 0), Height = 112 };
+        _stripScroll = new ScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, Content = _strip, Margin = new Thickness(0, 12, 0, 0), Height = 112 };
         Grid.SetRow(_stripScroll, 2);
         root.Children.Add(_stripScroll);
         for (int i = 0; i < _view.Count; i++) AddCell(i);
@@ -161,7 +157,7 @@ public class SelectPage : PageBase
         var img = new Image { Width = 130, Height = 87, Stretch = Stretch.UniformToFill };
         var heart = new TextBlock { Text = "❤", Foreground = Ui.Bad, FontSize = 18, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 2, 5, 0), Visibility = p.Selected ? Visibility.Visible : Visibility.Collapsed, Tag = "h" };
         var g = new Grid { Children = { img, heart } };
-        var cell = new Border { Child = g, BorderThickness = new Thickness(3), BorderBrush = Brushes.Transparent, CornerRadius = new CornerRadius(8), Margin = new Thickness(0, 0, 6, 0), Cursor = Cursors.Hand, Background = Ui.Black };
+        var cell = new Border { Child = g, BorderThickness = new Thickness(3), BorderBrush = Brushes.Transparent, CornerRadius = new CornerRadius(10), Margin = new Thickness(0, 0, 8, 0), Cursor = Cursors.Hand, Background = Ui.Black };
         int k = i;
         cell.MouseLeftButtonDown += (_, _) => Go(k);
         _strip.Children.Add(cell);
@@ -266,22 +262,20 @@ public class SelectPage : PageBase
             string folder = await St.ConfirmSelectionAsync(_client.Id);
             var w = new Window
             {
-                Title = "YAM", Width = 520, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Title = "Yam PICTURES", Width = 520, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Owner = Application.Current.MainWindow, Background = Ui.Panel, ResizeMode = ResizeMode.NoResize, FontFamily = Ui.Font
             };
-            var sp = new StackPanel { Margin = new Thickness(22) };
-            sp.Children.Add(Ui.Txt("✔ " + Loc.T("ምርጫ ተረጋግጧል", "Selection confirmed"), 20, Ui.Ok, true));
+            var sp = new StackPanel { Margin = new Thickness(24) };
+            sp.Children.Add(Ui.Txt("✔ " + Loc.T("ምርጫ ተረጋግጧል", "Selection Confirmed"), 20, Ui.Ok, true));
             sp.Children.Add(Ui.Txt($"{_client.Name} · {_client.Phone}", 14, Ui.Mut));
             sp.Children.Add(new Border
             {
-                Background = Ui.Bg, CornerRadius = new CornerRadius(10), Padding = new Thickness(14), Margin = new Thickness(0, 14, 0, 14),
+                Background = Ui.Bg, BorderBrush = Ui.Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(12), Padding = new Thickness(16), Margin = new Thickness(0, 14, 0, 14),
                 Child = new TextBlock { FontFamily = new FontFamily("Consolas"), Foreground = Ui.Fg, FontSize = 13, LineHeight = 22, Text = $"📁 {folder}\n ├─ Originals ({_photos.Count})\n ├─ Selected ({n})\n ├─ Edited\n └─ Final" }
             });
-            sp.Children.Add(Ui.Txt(Loc.T("ሁኔታው \"ምርጫ ተጠናቋል\" ሆኗል፤ PC2 ላይ በ \"ስራዎች\" ይታያል።", "Status is now \"Selected\"; it shows on PC2 under Jobs."), 13, Ui.Mut));
-            sp.Children.Add(new Border { Height = 14 });
             var row = new StackPanel { Orientation = Orientation.Horizontal };
-            if (C.Host) row.Children.Add(Ui.Btn("📁 " + Loc.T("folder ክፈት", "Open folder"), () => OpenFolder(C.Studio.ClientFolderPath(new Client { Folder = folder })), 1));
-            row.Children.Add(Ui.Btn(Loc.T("ዝጋ", "Close"), () => w.Close()));
+            row.Children.Add(Ui.Btn("📁 " + Loc.T("folder ክፈት", "Open Folder"), () => OpenFolder(St.ClientFolderPath(new Client { Folder = folder })), 1));
+            row.Children.Add(Ui.Btn(Loc.T("ዝጋ", "Done"), () => w.Close()));
             sp.Children.Add(row);
             w.Content = sp;
             w.ShowDialog();
