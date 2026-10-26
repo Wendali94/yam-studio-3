@@ -16,15 +16,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- the tests live in their own project; do not compile them into the app -->
     <Compile Remove="tests/**" />
     <Compile Remove="publish/**" />
     <Compile Remove="artifacts/**" />
+    <!-- Ignore old PC1/PC2 files even if they were not deleted -->
+    <Compile Remove="Ui/SetupWindow.cs" />
+    <Compile Remove="Core/LanApi.cs" />
+    <Compile Remove="Core/RemoteStudio.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
-    <!-- UseWPF removes System.IO from the implicit usings; put it back -->
     <Using Include="System.IO" />
   </ItemGroup>
 
