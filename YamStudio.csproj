@@ -8,7 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>YamStudio</AssemblyName>
     <RootNamespace>YamStudio</RootNamespace>
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
@@ -23,8 +23,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Lets PC1 host a small web server (Kestrel) so PC2 can connect over the studio LAN -->
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
     <!-- UseWPF removes System.IO from the implicit usings; put it back -->
     <Using Include="System.IO" />
